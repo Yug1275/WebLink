@@ -3,7 +3,18 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Search, Plus, Edit2, Trash2, ChevronUp, ChevronDown, ExternalLink, GripVertical } from "lucide-react"
+import {
+  Search,
+  Plus,
+  Edit2,
+  Trash2,
+  ChevronUp,
+  ChevronDown,
+  ExternalLink,
+  GripVertical,
+  Eye,
+  EyeOff,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -27,6 +38,8 @@ interface Category {
   name: string
   websites: Website[]
 }
+
+type ViewMode = "compact" | "detailed"
 
 const defaultCategories: Category[] = [
   {
@@ -120,12 +133,19 @@ export default function WebsyncApp() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [draggedCategory, setDraggedCategory] = useState<string | null>(null)
   const [draggedWebsite, setDraggedWebsite] = useState<{ websiteId: string; categoryId: string } | null>(null)
+  const [viewMode, setViewMode] = useState<ViewMode>("detailed")
 
   const { theme, setTheme } = useTheme()
 
   // Load data from localStorage on component mount
   useEffect(() => {
     const savedCategories = localStorage.getItem("websync-categories")
+    const savedViewMode = localStorage.getItem("websync-view-mode") as ViewMode
+
+    if (savedViewMode) {
+      setViewMode(savedViewMode)
+    }
+
     if (savedCategories) {
       try {
         const parsed = JSON.parse(savedCategories)
@@ -153,6 +173,11 @@ export default function WebsyncApp() {
       localStorage.setItem("websync-categories", JSON.stringify(defaultCategories))
     }
   }, [])
+
+  // Save view mode to localStorage
+  useEffect(() => {
+    localStorage.setItem("websync-view-mode", viewMode)
+  }, [viewMode])
 
   // Save to localStorage whenever categories change
   useEffect(() => {
@@ -527,7 +552,40 @@ export default function WebsyncApp() {
         {/* Category Management */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-xl">Categories</CardTitle>
+            <div className="flex items-center gap-4">
+              <CardTitle className="text-xl">Categories</CardTitle>
+
+              {/* View Mode Toggle */}
+              <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+                <Button
+                  variant={viewMode === "compact" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("compact")}
+                  className={`text-xs px-3 py-1 ${
+                    viewMode === "compact"
+                      ? "bg-white dark:bg-slate-700 shadow-sm"
+                      : "hover:bg-slate-200 dark:hover:bg-slate-700"
+                  }`}
+                >
+                  <EyeOff className="h-3 w-3 mr-1" />
+                  Compact
+                </Button>
+                <Button
+                  variant={viewMode === "detailed" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("detailed")}
+                  className={`text-xs px-3 py-1 ${
+                    viewMode === "detailed"
+                      ? "bg-white dark:bg-slate-700 shadow-sm"
+                      : "hover:bg-slate-200 dark:hover:bg-slate-700"
+                  }`}
+                >
+                  <Eye className="h-3 w-3 mr-1" />
+                  Detailed
+                </Button>
+              </div>
+            </div>
+
             <div className="flex gap-2">
               <Button
                 variant="outline"
@@ -717,7 +775,7 @@ export default function WebsyncApp() {
                           {category.websites.map((website, index) => (
                             <div
                               key={website.id}
-                              className={`flex items-start gap-3 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg cursor-move transition-all duration-200 ${
+                              className={`flex items-start gap-3 ${viewMode === "compact" ? "p-2" : "p-4"} bg-slate-50 dark:bg-slate-800 rounded-lg cursor-move transition-all duration-200 ${
                                 draggedWebsite?.websiteId === website.id ? "opacity-50 scale-95" : ""
                               }`}
                               draggable
@@ -748,34 +806,55 @@ export default function WebsyncApp() {
 
                               <GripVertical className="h-4 w-4 text-slate-400 cursor-grab flex-shrink-0" />
 
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <h4 className="font-medium break-words leading-tight" title={website.name}>
-                                    {website.name}
-                                  </h4>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => window.open(website.url, "_blank")}
-                                    className="h-6 w-6 p-0 flex-shrink-0"
-                                  >
-                                    <ExternalLink className="h-3 w-3" />
-                                  </Button>
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                  <img
+                                    src={getFaviconUrl(website.url) || "/placeholder.svg"}
+                                    alt={`${website.name} favicon`}
+                                    className="w-6 h-6 rounded-full"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = "none";
+                                      (e.currentTarget.nextElementSibling as HTMLElement).style.display = "flex";
+                                    }}
+                                  />
+                                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold hidden">
+                                    {website.name.charAt(0).toUpperCase()}
+                                  </div>
                                 </div>
-                                <p
-                                  className="text-sm text-slate-600 dark:text-slate-300 break-all leading-tight"
-                                  title={website.url}
-                                >
-                                  {website.url}
-                                </p>
-                                {website.description && (
-                                  <p
-                                    className="text-sm text-slate-500 dark:text-slate-400 break-words leading-tight"
-                                    title={website.description}
-                                  >
-                                    {website.description}
-                                  </p>
-                                )}
+
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <h4 className="font-medium break-words leading-tight" title={website.name}>
+                                      {website.name}
+                                    </h4>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => window.open(website.url, "_blank")}
+                                      className="h-6 w-6 p-0 flex-shrink-0"
+                                    >
+                                      <ExternalLink className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                  {viewMode === "detailed" && (
+                                    <>
+                                      <p
+                                        className="text-sm text-slate-600 dark:text-slate-300 break-all leading-tight"
+                                        title={website.url}
+                                      >
+                                        {website.url}
+                                      </p>
+                                      {website.description && (
+                                        <p
+                                          className="text-sm text-slate-500 dark:text-slate-400 break-words leading-tight"
+                                          title={website.description}
+                                        >
+                                          {website.description}
+                                        </p>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
                               </div>
 
                               <div className="flex gap-1 flex-shrink-0">
@@ -870,7 +949,7 @@ export default function WebsyncApp() {
                 +91 9510303247
               </a>
             </p>
-            <p className="text-slate-400 dark:text-slate-600 text-xs">© 2025 LinkVerse. All rights reserved.</p>
+            <p className="text-slate-400 dark:text-slate-600 text-xs">© 2024 LinkVerse. All rights reserved.</p>
           </div>
         </footer>
         <Toaster />
