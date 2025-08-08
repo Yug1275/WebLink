@@ -490,41 +490,43 @@ export default function WebsyncApp() {
   const renderWebsiteContent = (category: Category) => {
     if (viewMode === "grid") {
       return (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 p-4">
-          {category.websites.map((website) => (
-            <div
-              key={website.id}
-              className={`flex flex-col items-center gap-2 p-3 rounded-xl cursor-pointer transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-700 ${
-                draggedWebsite?.websiteId === website.id ? "opacity-50 scale-95" : ""
-              }`}
-              draggable
-              onDragStart={(e) => handleWebsiteDragStart(e, website.id, category.id)}
-              onDragOver={handleWebsiteDragOver}
-              onDrop={(e) => handleWebsiteDropOnWebsite(e, website.id, category.id)}
-              onClick={() => window.open(website.url, "_blank")}
-              title={`${website.name}\n${website.url}${website.description ? `\n${website.description}` : ""}`}
-            >
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-white dark:bg-slate-800 shadow-md flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-600">
-                <img
-                  src={getFaviconUrl(website.url) || "/placeholder.svg"}
-                  alt={`${website.name} icon`}
-                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none"
-                    if (e.currentTarget.nextElementSibling) {
-                      (e.currentTarget.nextElementSibling as HTMLElement).style.display = "flex"
-                    }
-                  }}
-                />
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-sm font-bold hidden">
-                  {website.name.charAt(0).toUpperCase()}
+        <div className="flex justify-center w-full">
+          <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 p-3 sm:p-4 max-w-full">
+            {category.websites.map((website) => (
+              <div
+                key={website.id}
+                className={`flex flex-col items-center gap-2 p-2 sm:p-3 rounded-xl cursor-pointer transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-700 ${
+                  draggedWebsite?.websiteId === website.id ? "opacity-50 scale-95" : ""
+                }`}
+                draggable
+                onDragStart={(e) => handleWebsiteDragStart(e, website.id, category.id)}
+                onDragOver={handleWebsiteDragOver}
+                onDrop={(e) => handleWebsiteDropOnWebsite(e, website.id, category.id)}
+                onClick={() => window.open(website.url, "_blank")}
+                title={`${website.name}\n${website.url}${website.description ? `\n${website.description}` : ""}`}
+              >
+                <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl bg-white dark:bg-slate-800 shadow-md flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-600">
+                  <img
+                    src={getFaviconUrl(website.url) || "/placeholder.svg"}
+                    alt={`${website.name} icon`}
+                    className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-lg"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none"
+                      if (e.currentTarget.nextElementSibling) {
+                        (e.currentTarget.nextElementSibling as HTMLElement).style.display = "flex"
+                      }
+                    }}
+                  />
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-xs sm:text-sm font-bold hidden">
+                    {website.name.charAt(0).toUpperCase()}
+                  </div>
                 </div>
+                <span className="text-xs sm:text-sm text-center font-medium text-slate-700 dark:text-slate-300 leading-tight max-w-full px-1 line-clamp-2 break-words">
+                  {website.name}
+                </span>
               </div>
-              <span className="text-xs text-center font-medium text-slate-700 dark:text-slate-300 leading-tight max-w-full break-words">
-                {website.name}
-              </span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )
     }
@@ -695,18 +697,18 @@ export default function WebsyncApp() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-2 sm:p-4">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
-          <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">LinkVerse</h1>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100">LinkVerse</h1>
 
           {/* Search Bars */}
           <div className="flex-1 max-w-4xl">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               {/* Google Search */}
               <div className="space-y-2">
-                <Label htmlFor="google-search">Search on Google</Label>
+                <Label htmlFor="google-search" className="text-sm">Search on Google</Label>
                 <div className="flex gap-2">
                   <Input
                     id="google-search"
@@ -714,8 +716,9 @@ export default function WebsyncApp() {
                     value={googleSearch}
                     onChange={(e) => setGoogleSearch(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && handleGoogleSearch()}
+                    className="text-sm"
                   />
-                  <Button onClick={handleGoogleSearch} className="bg-blue-600 hover:bg-blue-700">
+                  <Button onClick={handleGoogleSearch} className="bg-blue-600 hover:bg-blue-700 px-3">
                     <Search className="h-4 w-4" />
                   </Button>
                 </div>
@@ -723,15 +726,16 @@ export default function WebsyncApp() {
 
               {/* Local Search */}
               <div className="space-y-2">
-                <Label htmlFor="local-search">Search your websites & categories</Label>
+                <Label htmlFor="local-search" className="text-sm">Search your websites & categories</Label>
                 <div className="flex gap-2">
                   <Input
                     id="local-search"
-                    placeholder="Search your saved websites or categories..."
+                    placeholder="Search your saved websites..."
                     value={localSearch}
                     onChange={(e) => setLocalSearch(e.target.value)}
+                    className="text-sm"
                   />
-                  <Button variant="outline">
+                  <Button variant="outline" className="px-3">
                     <Search className="h-4 w-4" />
                   </Button>
                 </div>
@@ -740,7 +744,7 @@ export default function WebsyncApp() {
           </div>
 
           {/* Theme Toggle */}
-          <Button variant="outline" size="sm" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
+          <Button variant="outline" size="sm" onClick={() => setTheme(theme === "light" ? "dark" : "light")} className="self-start lg:self-center">
             <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
@@ -749,59 +753,59 @@ export default function WebsyncApp() {
 
         {/* Category Management */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div className="flex items-center gap-4">
-              <CardTitle className="text-xl">Categories</CardTitle>
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+              <CardTitle className="text-lg sm:text-xl">Categories</CardTitle>
 
               {/* View Mode Toggle */}
-              <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+              <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1 w-fit">
                 <Button
                   variant={viewMode === "compact" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("compact")}
-                  className={`text-xs px-3 py-1 ${
+                  className={`text-xs px-2 sm:px-3 py-1 ${
                     viewMode === "compact"
                       ? "bg-white dark:bg-slate-700 shadow-sm"
                       : "hover:bg-slate-200 dark:hover:bg-slate-700"
                   }`}
                 >
                   <EyeOff className="h-3 w-3 mr-1" />
-                  Compact
+                  <span className="hidden xs:inline">Compact</span>
                 </Button>
                 <Button
                   variant={viewMode === "detailed" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("detailed")}
-                  className={`text-xs px-3 py-1 ${
+                  className={`text-xs px-2 sm:px-3 py-1 ${
                     viewMode === "detailed"
                       ? "bg-white dark:bg-slate-700 shadow-sm"
                       : "hover:bg-slate-200 dark:hover:bg-slate-700"
                   }`}
                 >
                   <Eye className="h-3 w-3 mr-1" />
-                  Detailed
+                  <span className="hidden xs:inline">Detailed</span>
                 </Button>
                 <Button
                   variant={viewMode === "grid" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("grid")}
-                  className={`text-xs px-3 py-1 ${
+                  className={`text-xs px-2 sm:px-3 py-1 ${
                     viewMode === "grid"
                       ? "bg-white dark:bg-slate-700 shadow-sm"
                       : "hover:bg-slate-200 dark:hover:bg-slate-700"
                   }`}
                 >
                   <Grid3X3 className="h-3 w-3 mr-1" />
-                  Grid
+                  <span className="hidden xs:inline">Grid</span>
                 </Button>
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button
                 variant="outline"
                 onClick={resetToDefaults}
-                className="text-orange-600 hover:text-orange-700 border-orange-300 hover:border-orange-400 bg-transparent"
+                className="text-orange-600 hover:text-orange-700 border-orange-300 hover:border-orange-400 bg-transparent text-sm"
               >
                 Reset to Defaults
               </Button>
@@ -815,12 +819,12 @@ export default function WebsyncApp() {
                 }}
               >
                 <DialogTrigger asChild>
-                  <Button className="bg-green-600 hover:bg-green-700">
+                  <Button className="bg-green-600 hover:bg-green-700 text-sm">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Category
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="w-[95vw] max-w-md">
                   <DialogHeader>
                     <DialogTitle>Add New Category</DialogTitle>
                   </DialogHeader>
@@ -842,15 +846,15 @@ export default function WebsyncApp() {
               </Dialog>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-6">
             {filteredCategories.length === 0 ? (
-              <p className="text-slate-500 dark:text-slate-400 text-center py-8">
+              <p className="text-slate-500 dark:text-slate-400 text-center py-8 text-sm sm:text-base">
                 {localSearch
                   ? "No categories or websites match your search."
                   : "No categories yet. Add your first category to get started!"}
               </p>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                 {filteredCategories.map((category) => (
                   <Card
                     key={category.id}
@@ -865,29 +869,29 @@ export default function WebsyncApp() {
                       handleWebsiteDropOnCategory(e, category.id)
                     }}
                   >
-                    <CardHeader className="pb-3">
+                    <CardHeader className="pb-3 p-3 sm:p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                           <GripVertical className="h-4 w-4 text-slate-400 cursor-grab flex-shrink-0" />
                           <CardTitle
-                            className="text-lg whitespace-nowrap overflow-hidden text-ellipsis"
+                            className="text-base sm:text-lg whitespace-nowrap overflow-hidden text-ellipsis"
                             title={category.name}
                           >
                             {category.name}
                           </CardTitle>
-                          <Badge variant="secondary" className="flex-shrink-0">
+                          <Badge variant="secondary" className="flex-shrink-0 text-xs">
                             {category.websites.length}
                           </Badge>
                         </div>
                         <div className="flex gap-1 flex-shrink-0">
                           <Dialog>
                             <DialogTrigger asChild>
-                              <Button variant="outline" size="sm" className="text-xs bg-transparent px-2 py-1">
+                              <Button variant="outline" size="sm" className="text-xs bg-transparent px-1 sm:px-2 py-1">
                                 <Plus className="h-3 w-3 mr-1" />
                                 <span className="hidden sm:inline">Add</span>
                               </Button>
                             </DialogTrigger>
-                            <DialogContent>
+                            <DialogContent className="w-[95vw] max-w-md">
                               <DialogHeader>
                                 <DialogTitle>Add Website to {category.name}</DialogTitle>
                               </DialogHeader>
@@ -938,12 +942,12 @@ export default function WebsyncApp() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => editCategory(category)}
-                                className="text-xs px-2 py-1"
+                                className="text-xs px-1 sm:px-2 py-1"
                               >
                                 <Edit2 className="h-3 w-3" />
                               </Button>
                             </DialogTrigger>
-                            <DialogContent>
+                            <DialogContent className="w-[95vw] max-w-md">
                               <DialogHeader>
                                 <DialogTitle>Edit Category</DialogTitle>
                               </DialogHeader>
@@ -969,16 +973,16 @@ export default function WebsyncApp() {
                             variant="outline"
                             size="sm"
                             onClick={() => deleteCategory(category.id)}
-                            className="text-red-600 hover:text-red-700 text-xs px-2 py-1"
+                            className="text-red-600 hover:text-red-700 text-xs px-1 sm:px-2 py-1"
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent className={viewMode === "grid" ? "p-0" : ""}>
+                    <CardContent className={viewMode === "grid" ? "p-0" : "p-3 sm:p-4 pt-0"}>
                       {category.websites.length === 0 ? (
-                        <p className="text-slate-500 dark:text-slate-400 text-center py-4">
+                        <p className="text-slate-500 dark:text-slate-400 text-center py-4 text-sm">
                           No websites in this category yet.
                         </p>
                       ) : (
@@ -992,18 +996,18 @@ export default function WebsyncApp() {
           </CardContent>
         </Card>
         {/* Footer */}
-        <footer className="mt-12 border-t border-slate-200 dark:border-slate-700 pt-8">
+        <footer className="mt-8 sm:mt-12 border-t border-slate-200 dark:border-slate-700 pt-6 sm:pt-8">
           <div className="text-center space-y-2">
-            <p className="text-slate-600 dark:text-slate-400 font-medium">
+            <p className="text-slate-600 dark:text-slate-400 font-medium text-sm sm:text-base">
               Developed by <span className="text-slate-800 dark:text-slate-200 font-semibold">Yug Patel</span>
             </p>
-            <p className="text-slate-500 dark:text-slate-500 text-sm">
+            <p className="text-slate-500 dark:text-slate-500 text-xs sm:text-sm">
               Contact:{" "}
               <a href="tel:+919510303247" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
                 +91 9510303247
               </a>
             </p>
-            <p className="text-slate-400 dark:text-slate-600 text-xs">© 2024 LinkVerse. All rights reserved.</p>
+            <p className="text-slate-400 dark:text-slate-600 text-xs">© 2025 LinkVerse. All rights reserved.</p>
           </div>
         </footer>
         <Toaster />
