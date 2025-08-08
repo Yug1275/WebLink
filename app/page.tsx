@@ -3,18 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import {
-  Search,
-  Plus,
-  Edit2,
-  Trash2,
-  ChevronUp,
-  ChevronDown,
-  ExternalLink,
-  GripVertical,
-  Eye,
-  EyeOff,
-} from "lucide-react"
+import { Search, Plus, Edit2, Trash2, ChevronUp, ChevronDown, ExternalLink, GripVertical, Eye, EyeOff, Grid3X3 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -22,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { useTheme } from "next-themes"
-import { Moon, Sun } from "lucide-react"
+import { Moon, Sun } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
 import { Toaster } from "@/components/ui/toaster"
 
@@ -39,7 +28,7 @@ interface Category {
   websites: Website[]
 }
 
-type ViewMode = "compact" | "detailed"
+type ViewMode = "compact" | "detailed" | "grid"
 
 const defaultCategories: Category[] = [
   {
@@ -62,7 +51,51 @@ const defaultCategories: Category[] = [
       },
     ],
   },
-  // ... (other default categories remain unchanged)
+  {
+    id: "news-category",
+    name: "News",
+    websites: [
+      { id: "bbc", name: "BBC News", url: "https://bbc.com/news", description: "British Broadcasting Corporation" },
+      { id: "cnn", name: "CNN", url: "https://cnn.com", description: "Cable News Network" },
+      { id: "reuters", name: "Reuters", url: "https://reuters.com", description: "International news agency" },
+      {
+        id: "techcrunch",
+        name: "TechCrunch",
+        url: "https://techcrunch.com",
+        description: "Technology news and analysis",
+      },
+    ],
+  },
+  {
+    id: "movies-category",
+    name: "Movies",
+    websites: [
+      { id: "netflix", name: "Netflix", url: "https://netflix.com", description: "Streaming service" },
+      { id: "imdb", name: "IMDb", url: "https://imdb.com", description: "Internet Movie Database" },
+      { id: "disney", name: "Disney+", url: "https://disneyplus.com", description: "Disney streaming platform" },
+      { id: "prime", name: "Prime Video", url: "https://primevideo.com", description: "Amazon's streaming service" },
+    ],
+  },
+  {
+    id: "songs-category",
+    name: "Songs",
+    websites: [
+      { id: "spotify", name: "Spotify", url: "https://spotify.com", description: "Music streaming platform" },
+      {
+        id: "youtube-music",
+        name: "YouTube Music",
+        url: "https://music.youtube.com",
+        description: "Google's music service",
+      },
+      {
+        id: "apple-music",
+        name: "Apple Music",
+        url: "https://music.apple.com",
+        description: "Apple's music streaming",
+      },
+      { id: "soundcloud", name: "SoundCloud", url: "https://soundcloud.com", description: "Audio platform" },
+    ],
+  },
   {
     id: "social-media-category",
     name: "Social Media",
@@ -77,8 +110,6 @@ const defaultCategories: Category[] = [
 
 export default function WebsyncApp() {
   const [categories, setCategories] = useState<Category[]>([])
-  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false)
-  const [isWebsiteDialogOpen, setIsWebsiteDialogOpen] = useState(false)
   const [googleSearch, setGoogleSearch] = useState("")
   const [localSearch, setLocalSearch] = useState("")
   const [filteredCategories, setFilteredCategories] = useState<Category[]>([])
@@ -88,43 +119,49 @@ export default function WebsyncApp() {
   const [editingWebsite, setEditingWebsite] = useState<{ website: Website; categoryId: string } | null>(null)
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("")
   const { toast } = useToast()
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [draggedCategory, setDraggedCategory] = useState<string | null>(null)
   const [draggedWebsite, setDraggedWebsite] = useState<{ websiteId: string; categoryId: string } | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>("detailed")
 
   const { theme, setTheme } = useTheme()
 
+  // Initialize localStorage with default categories if needed
+  const initializeDefaultCategories = () => {
+    try {
+      const existingCategories = localStorage.getItem("websync-categories")
+      if (!existingCategories) {
+        localStorage.setItem("websync-categories", JSON.stringify(defaultCategories))
+        localStorage.setItem("websync-initialized", "true")
+        return defaultCategories
+      }
+      
+      const parsed = JSON.parse(existingCategories)
+      if (!Array.isArray(parsed) || parsed.length === 0) {
+        localStorage.setItem("websync-categories", JSON.stringify(defaultCategories))
+        localStorage.setItem("websync-initialized", "true")
+        return defaultCategories
+      }
+      
+      return parsed
+    } catch (error) {
+      console.error("Error initializing categories:", error)
+      localStorage.setItem("websync-categories", JSON.stringify(defaultCategories))
+      localStorage.setItem("websync-initialized", "true")
+      return defaultCategories
+    }
+  }
+
   // Load data from localStorage on component mount
   useEffect(() => {
-    const savedCategories = localStorage.getItem("websync-categories")
     const savedViewMode = localStorage.getItem("websync-view-mode") as ViewMode
-
-    if (savedViewMode) {
+    if (savedViewMode && ["compact", "detailed", "grid"].includes(savedViewMode)) {
       setViewMode(savedViewMode)
     }
 
-    if (savedCategories) {
-      try {
-        const parsed = JSON.parse(savedCategories)
-        if (parsed && Array.isArray(parsed) && parsed.length > 0) {
-          setCategories(parsed)
-          setFilteredCategories(parsed)
-        } else {
-          setCategories(defaultCategories)
-          setFilteredCategories(defaultCategories)
-          localStorage.setItem("websync-categories", JSON.stringify(defaultCategories))
-        }
-      } catch (error) {
-        console.error("Error parsing saved categories:", error)
-        setCategories(defaultCategories)
-        setFilteredCategories(defaultCategories)
-        localStorage.setItem("websync-categories", JSON.stringify(defaultCategories))
-      }
-    } else {
-      setCategories(defaultCategories)
-      setFilteredCategories(defaultCategories)
-      localStorage.setItem("websync-categories", JSON.stringify(defaultCategories))
-    }
+    const initialCategories = initializeDefaultCategories()
+    setCategories(initialCategories)
+    setFilteredCategories(initialCategories)
   }, [])
 
   // Save view mode to localStorage
@@ -189,6 +226,7 @@ export default function WebsyncApp() {
       return
     }
 
+    // Check if category name already exists (case-insensitive)
     const categoryExists = categories.some((cat) => cat.name.toLowerCase() === newCategoryName.trim().toLowerCase())
 
     if (categoryExists) {
@@ -209,7 +247,8 @@ export default function WebsyncApp() {
     setCategories([...categories, newCategory])
     setNewCategoryName("")
 
-    setIsCategoryDialogOpen(false)
+    // Close dialog and show success toast
+    setIsDialogOpen(false)
 
     toast({
       title: "Success",
@@ -234,43 +273,28 @@ export default function WebsyncApp() {
   }
 
   const addWebsite = () => {
-    console.log("Adding website...", { newWebsite, selectedCategoryId }) // Debug log
-    if (!newWebsite.name.trim() || !newWebsite.url.trim() || !selectedCategoryId) {
-      toast({
-        title: "Error",
-        description: "Please fill all fields and select a category",
-        variant: "destructive",
-        className: "fixed top-4 right-4 w-auto max-w-sm",
-      })
-      return
+    if (newWebsite.name.trim() && newWebsite.url.trim() && selectedCategoryId) {
+      let url = newWebsite.url.trim()
+      if (!url.startsWith("http://") && !url.startsWith("https://")) {
+        url = "https://" + url
+      }
+
+      const website: Website = {
+        id: Date.now().toString(),
+        name: newWebsite.name.trim(),
+        url: url,
+        description: newWebsite.description.trim(),
+      }
+
+      setCategories(
+        categories.map((cat) =>
+          cat.id === selectedCategoryId ? { ...cat, websites: [...cat.websites, website] } : cat,
+        ),
+      )
+
+      setNewWebsite({ name: "", url: "", description: "" })
+      setSelectedCategoryId("")
     }
-
-    let url = newWebsite.url.trim()
-    if (!url.startsWith("http://") && !url.startsWith("https://")) {
-      url = "https://" + url
-    }
-
-    const website: Website = {
-      id: Date.now().toString(),
-      name: newWebsite.name.trim(),
-      url: url,
-      description: newWebsite.description?.trim() || "",
-    }
-
-    setCategories(
-      categories.map((cat) =>
-        cat.id === selectedCategoryId ? { ...cat, websites: [...cat.websites, website] } : cat,
-      ),
-    )
-
-    setNewWebsite({ name: "", url: "", description: "" })
-    setIsWebsiteDialogOpen(false)
-
-    toast({
-      title: "Success",
-      description: `Website "${newWebsite.name.trim()}" added successfully`,
-      className: "fixed top-4 right-4 w-auto max-w-sm bg-green-500 text-white",
-    })
   }
 
   const editWebsite = (website: Website, categoryId: string) => {
@@ -330,9 +354,9 @@ export default function WebsyncApp() {
   const getFaviconUrl = (url: string) => {
     try {
       const domain = new URL(url.startsWith("http") ? url : `https://${url}`).hostname
-      return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`
+      return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`
     } catch {
-      return `https://www.google.com/s2/favicons?domain=example.com&sz=32`
+      return `https://www.google.com/s2/favicons?domain=example.com&sz=64`
     }
   }
 
@@ -380,6 +404,7 @@ export default function WebsyncApp() {
     e.stopPropagation()
 
     if (draggedWebsite && draggedWebsite.categoryId !== targetCategoryId) {
+      // Move website to different category
       const sourceCategory = categories.find((cat) => cat.id === draggedWebsite.categoryId)
       const website = sourceCategory?.websites.find((site) => site.id === draggedWebsite.websiteId)
 
@@ -387,8 +412,10 @@ export default function WebsyncApp() {
         setCategories(
           categories.map((cat) => {
             if (cat.id === draggedWebsite.categoryId) {
+              // Remove from source category
               return { ...cat, websites: cat.websites.filter((site) => site.id !== draggedWebsite.websiteId) }
             } else if (cat.id === targetCategoryId) {
+              // Add to target category
               return { ...cat, websites: [...cat.websites, website] }
             }
             return cat
@@ -406,6 +433,7 @@ export default function WebsyncApp() {
 
     if (draggedWebsite) {
       if (draggedWebsite.categoryId === targetCategoryId) {
+        // Reorder within same category
         setCategories(
           categories.map((cat) => {
             if (cat.id === targetCategoryId) {
@@ -422,6 +450,7 @@ export default function WebsyncApp() {
           }),
         )
       } else {
+        // Move to different category at specific position
         const sourceCategory = categories.find((cat) => cat.id === draggedWebsite.categoryId)
         const website = sourceCategory?.websites.find((site) => site.id === draggedWebsite.websiteId)
 
@@ -450,11 +479,219 @@ export default function WebsyncApp() {
     setCategories(defaultCategories)
     setFilteredCategories(defaultCategories)
     localStorage.setItem("websync-categories", JSON.stringify(defaultCategories))
+    localStorage.setItem("websync-initialized", "true")
     toast({
       title: "Success",
       description: "Categories reset to defaults successfully",
       className: "fixed top-4 right-4 w-auto max-w-sm bg-green-500 text-white",
     })
+  }
+
+  const renderWebsiteContent = (category: Category) => {
+    if (viewMode === "grid") {
+      return (
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 p-4">
+          {category.websites.map((website) => (
+            <div
+              key={website.id}
+              className={`flex flex-col items-center gap-2 p-3 rounded-xl cursor-pointer transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-700 ${
+                draggedWebsite?.websiteId === website.id ? "opacity-50 scale-95" : ""
+              }`}
+              draggable
+              onDragStart={(e) => handleWebsiteDragStart(e, website.id, category.id)}
+              onDragOver={handleWebsiteDragOver}
+              onDrop={(e) => handleWebsiteDropOnWebsite(e, website.id, category.id)}
+              onClick={() => window.open(website.url, "_blank")}
+              title={`${website.name}\n${website.url}${website.description ? `\n${website.description}` : ""}`}
+            >
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-white dark:bg-slate-800 shadow-md flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-600">
+                <img
+                  src={getFaviconUrl(website.url) || "/placeholder.svg"}
+                  alt={`${website.name} icon`}
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none"
+                    if (e.currentTarget.nextElementSibling) {
+                      (e.currentTarget.nextElementSibling as HTMLElement).style.display = "flex"
+                    }
+                  }}
+                />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-sm font-bold hidden">
+                  {website.name.charAt(0).toUpperCase()}
+                </div>
+              </div>
+              <span className="text-xs text-center font-medium text-slate-700 dark:text-slate-300 leading-tight max-w-full break-words">
+                {website.name}
+              </span>
+            </div>
+          ))}
+        </div>
+      )
+    }
+
+    // Compact and Detailed views
+    return (
+      <div className="grid gap-3 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600">
+        {category.websites.map((website, index) => (
+          <div
+            key={website.id}
+            className={`flex items-start gap-3 ${viewMode === "compact" ? "p-2" : "p-4"} bg-slate-50 dark:bg-slate-800 rounded-lg cursor-move transition-all duration-200 ${
+              draggedWebsite?.websiteId === website.id ? "opacity-50 scale-95" : ""
+            }`}
+            draggable
+            onDragStart={(e) => handleWebsiteDragStart(e, website.id, category.id)}
+            onDragOver={handleWebsiteDragOver}
+            onDrop={(e) => handleWebsiteDropOnWebsite(e, website.id, category.id)}
+          >
+            <div className="flex flex-col gap-1 flex-shrink-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => moveWebsite(category.id, website.id, "up")}
+                disabled={index === 0}
+                className="h-6 w-6 p-0"
+              >
+                <ChevronUp className="h-3 w-3" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => moveWebsite(category.id, website.id, "down")}
+                disabled={index === category.websites.length - 1}
+                className="h-6 w-6 p-0"
+              >
+                <ChevronDown className="h-3 w-3" />
+              </Button>
+            </div>
+
+            <GripVertical className="h-4 w-4 text-slate-400 cursor-grab flex-shrink-0" />
+
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                <img
+                  src={getFaviconUrl(website.url) || "/placeholder.svg"}
+                  alt={`${website.name} favicon`}
+                  className="w-6 h-6 rounded-full"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none"
+                    if (e.currentTarget.nextElementSibling) {
+                      (e.currentTarget.nextElementSibling as HTMLElement).style.display = "flex"
+                    }
+                  }}
+                />
+                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold hidden">
+                  {website.name.charAt(0).toUpperCase()}
+                </div>
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h4 className="font-medium break-words leading-tight" title={website.name}>
+                    {website.name}
+                  </h4>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => window.open(website.url, "_blank")}
+                    className="h-6 w-6 p-0 flex-shrink-0"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                  </Button>
+                </div>
+                {viewMode === "detailed" && (
+                  <>
+                    <p
+                      className="text-sm text-slate-600 dark:text-slate-300 break-all leading-tight"
+                      title={website.url}
+                    >
+                      {website.url}
+                    </p>
+                    {website.description && (
+                      <p
+                        className="text-sm text-slate-500 dark:text-slate-400 break-words leading-tight"
+                        title={website.description}
+                      >
+                        {website.description}
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-1 flex-shrink-0">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="sm" onClick={() => editWebsite(website, category.id)}>
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit Website</DialogTitle>
+                  </DialogHeader>
+                  {editingWebsite && (
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="edit-website-name">Website Name</Label>
+                        <Input
+                          id="edit-website-name"
+                          value={editingWebsite.website.name}
+                          onChange={(e) =>
+                            setEditingWebsite({
+                              ...editingWebsite,
+                              website: { ...editingWebsite.website, name: e.target.value },
+                            })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="edit-website-url">Website URL</Label>
+                        <Input
+                          id="edit-website-url"
+                          value={editingWebsite.website.url}
+                          onChange={(e) =>
+                            setEditingWebsite({
+                              ...editingWebsite,
+                              website: { ...editingWebsite.website, url: e.target.value },
+                            })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="edit-website-description">Description</Label>
+                        <Input
+                          id="edit-website-description"
+                          value={editingWebsite.website.description || ""}
+                          onChange={(e) =>
+                            setEditingWebsite({
+                              ...editingWebsite,
+                              website: { ...editingWebsite.website, description: e.target.value },
+                            })
+                          }
+                        />
+                      </div>
+                      <Button onClick={updateWebsite} className="w-full">
+                        Update Website
+                      </Button>
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => deleteWebsite(website.id, category.id)}
+                className="text-red-600 hover:text-red-700"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    )
   }
 
   return (
@@ -544,6 +781,19 @@ export default function WebsyncApp() {
                   <Eye className="h-3 w-3 mr-1" />
                   Detailed
                 </Button>
+                <Button
+                  variant={viewMode === "grid" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("grid")}
+                  className={`text-xs px-3 py-1 ${
+                    viewMode === "grid"
+                      ? "bg-white dark:bg-slate-700 shadow-sm"
+                      : "hover:bg-slate-200 dark:hover:bg-slate-700"
+                  }`}
+                >
+                  <Grid3X3 className="h-3 w-3 mr-1" />
+                  Grid
+                </Button>
               </div>
             </div>
 
@@ -556,8 +806,13 @@ export default function WebsyncApp() {
                 Reset to Defaults
               </Button>
               <Dialog
-                open={isCategoryDialogOpen}
-                onOpenChange={setIsCategoryDialogOpen}
+                open={isDialogOpen}
+                onOpenChange={(open) => {
+                  setIsDialogOpen(open)
+                  if (open) {
+                    setNewCategoryName("")
+                  }
+                }}
               >
                 <DialogTrigger asChild>
                   <Button className="bg-green-600 hover:bg-green-700">
@@ -625,16 +880,7 @@ export default function WebsyncApp() {
                           </Badge>
                         </div>
                         <div className="flex gap-1 flex-shrink-0">
-                          <Dialog
-                            open={isWebsiteDialogOpen}
-                            onOpenChange={(open) => {
-                              setIsWebsiteDialogOpen(open)
-                              if (open) {
-                                setSelectedCategoryId(category.id) // Set category ID when dialog opens
-                                setNewWebsite({ name: "", url: "", description: "" }) // Reset form
-                              }
-                            }}
-                          >
+                          <Dialog>
                             <DialogTrigger asChild>
                               <Button variant="outline" size="sm" className="text-xs bg-transparent px-2 py-1">
                                 <Plus className="h-3 w-3 mr-1" />
@@ -673,7 +919,13 @@ export default function WebsyncApp() {
                                     onChange={(e) => setNewWebsite({ ...newWebsite, description: e.target.value })}
                                   />
                                 </div>
-                                <Button onClick={addWebsite} className="w-full">
+                                <Button
+                                  onClick={() => {
+                                    setSelectedCategoryId(category.id)
+                                    addWebsite()
+                                  }}
+                                  className="w-full"
+                                >
                                   Add Website
                                 </Button>
                               </div>
@@ -724,170 +976,13 @@ export default function WebsyncApp() {
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className={viewMode === "grid" ? "p-0" : ""}>
                       {category.websites.length === 0 ? (
                         <p className="text-slate-500 dark:text-slate-400 text-center py-4">
                           No websites in this category yet.
                         </p>
                       ) : (
-                        <div className="grid gap-3 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600">
-                          {category.websites.map((website, index) => (
-                            <div
-                              key={website.id}
-                              className={`flex items-start gap-3 ${viewMode === "compact" ? "p-2" : "p-4"} bg-slate-50 dark:bg-slate-800 rounded-lg cursor-move transition-all duration-200 ${
-                                draggedWebsite?.websiteId === website.id ? "opacity-50 scale-95" : ""
-                              }`}
-                              draggable
-                              onDragStart={(e) => handleWebsiteDragStart(e, website.id, category.id)}
-                              onDragOver={handleWebsiteDragOver}
-                              onDrop={(e) => handleWebsiteDropOnWebsite(e, website.id, category.id)}
-                            >
-                              <div className="flex flex-col gap-1 flex-shrink-0">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => moveWebsite(category.id, website.id, "up")}
-                                  disabled={index === 0}
-                                  className="h-6 w-6 p-0"
-                                >
-                                  <ChevronUp className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => moveWebsite(category.id, website.id, "down")}
-                                  disabled={index === category.websites.length - 1}
-                                  className="h-6 w-6 p-0"
-                                >
-                                  <ChevronDown className="h-3 w-3" />
-                                </Button>
-                              </div>
-
-                              <GripVertical className="h-4 w-4 text-slate-400 cursor-grab flex-shrink-0" />
-
-                              <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                  <img
-                                    src={getFaviconUrl(website.url) || "/placeholder.svg"}
-                                    alt={`${website.name} favicon`}
-                                    className="w-6 h-6 rounded-full"
-                                    onError={(e) => {
-                                      e.currentTarget.style.display = "none"
-                                      ;(e.currentTarget.nextElementSibling as HTMLElement).style.display = "flex"
-                                    }}
-                                  />
-                                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold hidden">
-                                    {website.name.charAt(0).toUpperCase()}
-                                  </div>
-                                </div>
-
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <h4 className="font-medium break-words leading-tight" title={website.name}>
-                                      {website.name}
-                                    </h4>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => window.open(website.url, "_blank")}
-                                      className="h-6 w-6 p-0 flex-shrink-0"
-                                    >
-                                      <ExternalLink className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                  {viewMode === "detailed" && (
-                                    <>
-                                      <p
-                                        className="text-sm text-slate-600 dark:text-slate-300 break-all leading-tight"
-                                        title={website.url}
-                                      >
-                                        {website.url}
-                                      </p>
-                                      {website.description && (
-                                        <p
-                                          className="text-sm text-slate-500 dark:text-slate-400 break-words leading-tight"
-                                          title={website.description}
-                                        >
-                                          {website.description}
-                                        </p>
-                                      )}
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-
-                              <div className="flex gap-1 flex-shrink-0">
-                                <Dialog>
-                                  <DialogTrigger asChild>
-                                    <Button variant="ghost" size="sm" onClick={() => editWebsite(website, category.id)}>
-                                      <Edit2 className="h-4 w-4" />
-                                    </Button>
-                                  </DialogTrigger>
-                                  <DialogContent>
-                                    <DialogHeader>
-                                      <DialogTitle>Edit Website</DialogTitle>
-                                    </DialogHeader>
-                                    {editingWebsite && (
-                                      <div className="space-y-4">
-                                        <div>
-                                          <Label htmlFor="edit-website-name">Website Name</Label>
-                                          <Input
-                                            id="edit-website-name"
-                                            value={editingWebsite.website.name}
-                                            onChange={(e) =>
-                                              setEditingWebsite({
-                                                ...editingWebsite,
-                                                website: { ...editingWebsite.website, name: e.target.value },
-                                              })
-                                            }
-                                          />
-                                        </div>
-                                        <div>
-                                          <Label htmlFor="edit-website-url">Website URL</Label>
-                                          <Input
-                                            id="edit-website-url"
-                                            value={editingWebsite.website.url}
-                                            onChange={(e) =>
-                                              setEditingWebsite({
-                                                ...editingWebsite,
-                                                website: { ...editingWebsite.website, url: e.target.value },
-                                              })
-                                            }
-                                          />
-                                        </div>
-                                        <div>
-                                          <Label htmlFor="edit-website-description">Description</Label>
-                                          <Input
-                                            id="edit-website-description"
-                                            value={editingWebsite.website.description || ""}
-                                            onChange={(e) =>
-                                              setEditingWebsite({
-                                                ...editingWebsite,
-                                                website: { ...editingWebsite.website, description: e.target.value },
-                                              })
-                                            }
-                                          />
-                                        </div>
-                                        <Button onClick={updateWebsite} className="w-full">
-                                          Update Website
-                                        </Button>
-                                      </div>
-                                    )}
-                                  </DialogContent>
-                                </Dialog>
-
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => deleteWebsite(website.id, category.id)}
-                                  className="text-red-600 hover:text-red-700"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                        renderWebsiteContent(category)
                       )}
                     </CardContent>
                   </Card>

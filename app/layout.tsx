@@ -10,7 +10,10 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "LinkVerse - Organize Your Websites",
   description: "Organize and access all your favorite websites in one place",
-    generator: 'v0.dev'
+  generator: "v0.dev",
+  icons: {
+    icon: "/favicon.jpg", // 👈 Add this line
+  },
 }
 
 export default function RootLayout({
